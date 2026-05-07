@@ -52,7 +52,13 @@ const games = {
     score: "衝突",
     init: initColoring,
     description: "隣り合う頂点が同じ色にならないように塗ります。",
-    settings: []
+    settings: [
+      { key: "level", label: "難易度", options: [
+        { value: "easy", label: "やさしい", description: "頂点が少なく、4色使える入門ステージ。" },
+        { value: "normal", label: "ふつう", description: "3色で塗り分ける中級ステージ。" },
+        { value: "hard", label: "むずかしい", description: "頂点と辺が多い高密度ステージ。" }
+      ] }
+    ]
   },
   maze: {
     title: "迷路設計",
@@ -884,75 +890,141 @@ function difference(a, b) {
   return all.filter((id) => a.left.includes(id) !== b.left.includes(id));
 }
 
-function initColoring() {
-  const nodes = [
-    { id: "A", x: 18, y: 14 },
-    { id: "B", x: 52, y: 10 },
-    { id: "C", x: 76, y: 35 },
-    { id: "D", x: 58, y: 68 },
-    { id: "E", x: 24, y: 70 },
-    { id: "F", x: 40, y: 40 }
-  ];
-  const edges = [["A", "B"], ["B", "C"], ["C", "D"], ["D", "E"], ["E", "A"], ["A", "F"], ["B", "F"], ["C", "F"], ["D", "F"], ["E", "F"]];
-  const fill = {};
+function initColoring(options = {}) {
+  const stageSets = {
+    easy: [
+      graphStage("三角と枝", 4, [[20, 28], [50, 14], [78, 32], [50, 68]], [[0, 1], [1, 2], [2, 0], [1, 3]]),
+      graphStage("四角形", 4, [[24, 24], [76, 24], [76, 72], [24, 72]], [[0, 1], [1, 2], [2, 3], [3, 0]]),
+      graphStage("小さな星", 4, [[50, 16], [78, 38], [66, 72], [34, 72], [22, 38]], [[0, 1], [1, 2], [2, 3], [3, 4], [4, 0], [0, 2]])
+    ],
+    normal: [
+      graphStage("六角形", 3, [[50, 10], [78, 28], [78, 66], [50, 84], [22, 66], [22, 28]], [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 0], [0, 3], [1, 4]]),
+      graphStage("中心つき", 3, [[50, 12], [78, 35], [68, 74], [32, 74], [22, 35], [50, 45]], [[0, 1], [1, 2], [2, 3], [3, 4], [4, 0], [0, 5], [1, 5], [2, 5], [3, 5], [4, 5]]),
+      graphStage("二つの輪", 3, [[22, 24], [50, 18], [78, 24], [68, 68], [50, 82], [32, 68]], [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 0], [0, 3], [1, 4], [2, 5]]),
+      graphStage("橋つき", 3, [[18, 20], [42, 20], [30, 48], [18, 76], [42, 76], [70, 30], [82, 58]], [[0, 1], [1, 2], [2, 0], [3, 4], [4, 2], [2, 3], [1, 5], [5, 6], [6, 4]])
+    ],
+    hard: [
+      graphStage("密な七角形", 3, [[50, 8], [76, 22], [84, 52], [64, 78], [36, 78], [16, 52], [24, 22]], [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 0], [0, 3], [0, 4], [1, 4], [1, 5], [2, 5], [2, 6]]),
+      graphStage("八頂点", 3, [[20, 18], [50, 10], [80, 18], [84, 48], [72, 78], [42, 84], [16, 64], [36, 44]], [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 0], [0, 7], [1, 7], [2, 7], [3, 7], [5, 7], [6, 7], [1, 5], [2, 6]]),
+      graphStage("三角格子", 3, [[20, 20], [50, 16], [80, 20], [34, 48], [66, 48], [20, 78], [50, 82], [80, 78]], [[0, 1], [1, 2], [0, 3], [1, 3], [1, 4], [2, 4], [3, 4], [3, 5], [3, 6], [4, 6], [4, 7], [5, 6], [6, 7]])
+    ]
+  };
+  const levelKey = options.level || "easy";
+  const stages = stageSets[levelKey];
+  let stageIndex = 0;
+  let fill = {};
   let activeColor = colors[0];
+  let solvedStages = 0;
 
+  const controls = element("div", "controls coloring-controls");
+  const nextButton = element("button", "tool-button primary", "次のステージ");
+  const retry = element("button", "tool-button", "塗り直し");
+  controls.append(nextButton, retry);
+  const info = element("div", "rule-note");
   const palette = element("div", "palette");
-  colors.forEach((color) => {
-    const swatch = element("button", "swatch");
-    swatch.style.background = color;
-    swatch.title = color;
-    swatch.addEventListener("click", () => {
-      activeColor = color;
-      render();
-    });
-    palette.append(swatch);
-  });
   const board = element("div", "coloring-board");
-  area.append(palette, board);
+  area.append(controls, info, palette, board);
+
+  function currentStage() {
+    return stages[stageIndex];
+  }
+
+  function renderPalette() {
+    palette.innerHTML = "";
+    colors.slice(0, currentStage().colorCount).forEach((color) => {
+      const swatch = element("button", "swatch");
+      swatch.style.background = color;
+      swatch.title = color;
+      swatch.classList.toggle("active", color === activeColor);
+      swatch.addEventListener("click", () => {
+        activeColor = color;
+        render();
+      });
+      palette.append(swatch);
+    });
+  }
 
   function render() {
-    palette.querySelectorAll(".swatch").forEach((swatch) => {
-      swatch.classList.toggle("active", swatch.style.backgroundColor === hexToRgb(activeColor));
-    });
+    const stage = currentStage();
+    renderPalette();
     board.innerHTML = "";
+    info.textContent = `ステージ ${stageIndex + 1} / ${stages.length}: ${stage.name}。使える色は${stage.colorCount}色です。`;
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.classList.add("graph-svg");
-    edges.forEach(([a, b]) => {
-      const one = nodes.find((node) => node.id === a);
-      const two = nodes.find((node) => node.id === b);
+    stage.edges.forEach(([a, b]) => {
+      const one = stage.nodes[a];
+      const two = stage.nodes[b];
       const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
       line.setAttribute("x1", `${one.x}%`);
       line.setAttribute("y1", `${one.y}%`);
       line.setAttribute("x2", `${two.x}%`);
       line.setAttribute("y2", `${two.y}%`);
-      line.setAttribute("stroke", "#9aa8a4");
-      line.setAttribute("stroke-width", "4");
+      line.setAttribute("stroke", isConflict(a, b) ? "#e4667b" : "#9aa8a4");
+      line.setAttribute("stroke-width", isConflict(a, b) ? "6" : "4");
       svg.append(line);
     });
     board.append(svg);
-    nodes.forEach((node) => {
+    stage.nodes.forEach((node, index) => {
       const button = element("button", "node", node.id);
       button.style.left = `calc(${node.x}% - 29px)`;
       button.style.top = `calc(${node.y}% - 29px)`;
-      button.style.background = fill[node.id] || "#fff";
+      button.style.background = fill[index] || "#fff";
       button.addEventListener("click", () => {
-        fill[node.id] = activeColor;
+        fill[index] = activeColor;
         render();
       });
       board.append(button);
     });
-    const conflicts = edges.filter(([a, b]) => fill[a] && fill[a] === fill[b]).length;
-    setScore(conflicts);
-    if (Object.keys(fill).length === nodes.length && conflicts === 0) {
-      setMessage("成功。隣り合う頂点がすべて別色です。");
+    const conflicts = countConflicts();
+    const complete = Object.keys(fill).length === stage.nodes.length;
+    const cleared = complete && conflicts === 0;
+    setScore(`${conflicts} / ${solvedStages}`);
+    nextButton.disabled = !cleared;
+    if (cleared) {
+      setMessage(stageIndex === stages.length - 1 ? `全ステージクリア。${stages.length}問を塗り分けました。` : "クリア。次のステージへ進めます。");
     } else {
-      setMessage(`同じ色で隣接している辺は${conflicts}本。色を選んで頂点をクリック。`);
+      setMessage(`同じ色で隣接している辺は${conflicts}本。すべての頂点を塗り分けよう。`);
     }
   }
 
-  render();
+  function isConflict(a, b) {
+    return fill[a] && fill[a] === fill[b];
+  }
+
+  function countConflicts() {
+    return currentStage().edges.filter(([a, b]) => isConflict(a, b)).length;
+  }
+
+  function resetStage() {
+    fill = {};
+    nextButton.disabled = true;
+    render();
+  }
+
+  function nextStage() {
+    if (nextButton.disabled) return;
+    solvedStages = Math.max(solvedStages, stageIndex + 1);
+    if (stageIndex < stages.length - 1) {
+      stageIndex += 1;
+      resetStage();
+    } else {
+      render();
+    }
+  }
+
+  nextButton.addEventListener("click", nextStage);
+  retry.addEventListener("click", resetStage);
+  resetStage();
   return () => {};
+}
+
+function graphStage(name, colorCount, positions, edges) {
+  return {
+    name,
+    colorCount,
+    nodes: positions.map(([x, y], index) => ({ id: String.fromCharCode(65 + index), x, y })),
+    edges
+  };
 }
 
 function initMaze() {
