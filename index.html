@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>アルゴリズムゲームラボ</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Algorithm Game Lab</p>
+        <h1>アルゴリズムゲームラボ</h1>
+      </div>
+      <button class="icon-button" id="resetGame" title="今のゲームをリセット" aria-label="今のゲームをリセット">↻</button>
+    </header>
+
+    <section class="layout">
+      <nav class="game-list" aria-label="ゲーム一覧">
+        <button class="game-card active" data-game="binary">
+          <span class="card-title">Hit &amp; Blow 探索</span>
+          <span class="card-subtitle">判定結果から候補を絞る数字推理</span>
+          <span class="card-meta">候補削減 / 制約探索</span>
+        </button>
+        <button class="game-card" data-game="cargo">
+          <span class="card-title">スタック &amp; キュー</span>
+          <span class="card-subtitle">流れ込む荷物をさばくパズル</span>
+          <span class="card-meta">LIFO / FIFO</span>
+        </button>
+        <button class="game-card" data-game="hanoi">
+          <span class="card-title">川渡ゲーム</span>
+          <span class="card-subtitle">制約を守って全員を対岸へ運ぶ</span>
+          <span class="card-meta">状態探索 / BFS</span>
+        </button>
+        <button class="game-card" data-game="coloring">
+          <span class="card-title">グラフ塗り分け</span>
+          <span class="card-subtitle">隣接制約を見ながら色を配置</span>
+          <span class="card-meta">グラフ理論 / 四色定理</span>
+        </button>
+        <button class="game-card" data-game="maze">
+          <span class="card-title">迷路設計</span>
+          <span class="card-subtitle">探索AIが解ける迷路を作る</span>
+          <span class="card-meta">BFS / DFS / A*</span>
+        </button>
+      </nav>
+
+      <section class="stage" aria-live="polite">
+        <div class="stage-head">
+          <div>
+            <p class="mode-label" id="modeLabel">候補削減 / 制約探索</p>
+            <h2 id="gameTitle">Hit &amp; Blow 探索</h2>
+          </div>
+          <div class="score-strip">
+            <span id="scoreLabel">手数</span>
+            <strong id="scoreValue">0</strong>
+          </div>
+        </div>
+
+        <div class="message" id="message">1から100までの秘密の数を当てよう。</div>
+        <div id="gameArea" class="game-area"></div>
+      </section>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
