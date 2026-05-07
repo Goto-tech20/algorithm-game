@@ -1,65 +1,65 @@
 const games = {
   binary: {
-    title: "Hit & Blow ??",
-    label: "???? / ????",
-    score: "??",
+    title: "Hit & Blow 探索",
+    label: "候補削減 / 制約探索",
+    score: "得点",
     init: initBinary,
-    description: "??????????????????",
+    description: "判定結果から候補を絞る数字推理です。",
     settings: [
-      { key: "level", label: "??", options: [
-        { value: "three", label: "3?", description: "?????????????" },
-        { value: "four", label: "4?", description: "???????????????" },
-        { value: "five", label: "5?", description: "???????????????" }
+      { key: "level", label: "桁数", options: [
+        { value: "three", label: "3桁", description: "短く推理しやすい基本問題。" },
+        { value: "four", label: "4桁", description: "候補が増えて本格的になります。" },
+        { value: "five", label: "5桁", description: "候補削減をかなり意識する難問。" }
       ] }
     ]
   },
   cargo: {
-    title: "???? & ???",
+    title: "スタック & キュー",
     label: "LIFO / FIFO",
-    score: "?? / ??",
+    score: "操作 / ミス",
     init: initCargo,
-    description: "Stack?Queue????????????????????",
+    description: "StackとQueueを使い分け、指定順に数字を取り出します。",
     settings: [
-      { key: "level", label: "???", options: [
-        { value: "easy", label: "????", description: "6???????????" },
-        { value: "normal", label: "???", description: "8???????????" },
-        { value: "hard", label: "?????", description: "10?????????????" }
+      { key: "level", label: "難易度", options: [
+        { value: "easy", label: "やさしい", description: "6個の数字で基本を確認。" },
+        { value: "normal", label: "ふつう", description: "8個の数字で少し先読み。" },
+        { value: "hard", label: "むずかしい", description: "10個の数字で読み切りが必要。" }
       ] },
-      { key: "mode", label: "???", options: [
-        { value: "normal", label: "??", description: "?????????????????" },
-        { value: "capacity", label: "????", description: "Stack?Queue?3???????????" },
-        { value: "preview", label: "?????", description: "??3??????????" }
+      { key: "mode", label: "モード", options: [
+        { value: "normal", label: "通常", description: "すべてのデータが見える基本モード。" },
+        { value: "capacity", label: "容量制限", description: "StackとQueueに3個までしか置けません。" },
+        { value: "preview", label: "先読み制限", description: "次の3個だけ見えるモード。" }
       ] }
     ]
   },
   hanoi: {
-    title: "?????",
-    label: "???? / BFS",
-    score: "??",
+    title: "川渡ゲーム",
+    label: "状態探索 / BFS",
+    score: "手数",
     init: initRiver,
-    description: "??????????????????????????",
+    description: "船を操縦できる人と制約を考えて全員を対岸へ運びます。",
     settings: [
-      { key: "level", label: "???", options: [
-        { value: "easy", label: "????", description: "?????????????" },
-        { value: "normal", label: "???", description: "??????????????" },
-        { value: "hard", label: "?????", description: "???????????????" }
+      { key: "level", label: "難易度", options: [
+        { value: "easy", label: "やさしい", description: "農夫・狼・ヤギ・キャベツ。" },
+        { value: "normal", label: "ふつう", description: "宣教師と人食い人の定番問題。" },
+        { value: "hard", label: "むずかしい", description: "家族・メイド・犬の複雑な制約。" }
       ] }
     ]
   },
   coloring: {
-    title: "???????",
-    label: "????? / ????",
-    score: "??",
+    title: "グラフ塗り分け",
+    label: "グラフ理論 / 四色定理",
+    score: "衝突",
     init: initColoring,
-    description: "???????????????????????",
+    description: "隣り合う頂点が同じ色にならないように塗ります。",
     settings: []
   },
   maze: {
-    title: "????",
+    title: "迷路設計",
     label: "BFS / DFS / A*",
-    score: "???",
+    score: "探索数",
     init: initMaze,
-    description: "??????BFS?????????????",
+    description: "壁を置いて、BFSで解ける迷路を設計します。",
     settings: []
   }
 };
@@ -132,7 +132,7 @@ function renderSettings(game) {
   settingsArea.innerHTML = "";
   const values = selectedSettings[currentGame];
   if (!game.settings.length) {
-    settingsArea.append(element("div", "rule-note", "?????????????????????????????"));
+    settingsArea.append(element("div", "rule-note", "このゲームには追加設定はありません。そのまま開始できます。"));
     return;
   }
   game.settings.forEach((group) => {
