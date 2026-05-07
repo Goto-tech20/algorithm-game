@@ -1,65 +1,171 @@
 const games = {
   binary: {
-    title: "Hit & Blow 探索",
-    label: "候補削減 / 制約探索",
-    score: "得点",
-    init: initBinary
+    title: "Hit & Blow ??",
+    label: "???? / ????",
+    score: "??",
+    init: initBinary,
+    description: "??????????????????",
+    settings: [
+      { key: "level", label: "??", options: [
+        { value: "three", label: "3?", description: "?????????????" },
+        { value: "four", label: "4?", description: "???????????????" },
+        { value: "five", label: "5?", description: "???????????????" }
+      ] }
+    ]
   },
   cargo: {
-    title: "スタック & キュー",
+    title: "???? & ???",
     label: "LIFO / FIFO",
-    score: "操作 / ミス",
-    init: initCargo
+    score: "?? / ??",
+    init: initCargo,
+    description: "Stack?Queue????????????????????",
+    settings: [
+      { key: "level", label: "???", options: [
+        { value: "easy", label: "????", description: "6???????????" },
+        { value: "normal", label: "???", description: "8???????????" },
+        { value: "hard", label: "?????", description: "10?????????????" }
+      ] },
+      { key: "mode", label: "???", options: [
+        { value: "normal", label: "??", description: "?????????????????" },
+        { value: "capacity", label: "????", description: "Stack?Queue?3???????????" },
+        { value: "preview", label: "?????", description: "??3??????????" }
+      ] }
+    ]
   },
   hanoi: {
-    title: "川渡ゲーム",
-    label: "状態探索 / BFS",
-    score: "手数",
-    init: initRiver
+    title: "?????",
+    label: "???? / BFS",
+    score: "??",
+    init: initRiver,
+    description: "??????????????????????????",
+    settings: [
+      { key: "level", label: "???", options: [
+        { value: "easy", label: "????", description: "?????????????" },
+        { value: "normal", label: "???", description: "??????????????" },
+        { value: "hard", label: "?????", description: "???????????????" }
+      ] }
+    ]
   },
   coloring: {
-    title: "グラフ塗り分け",
-    label: "グラフ理論 / 四色定理",
-    score: "衝突",
-    init: initColoring
+    title: "???????",
+    label: "????? / ????",
+    score: "??",
+    init: initColoring,
+    description: "???????????????????????",
+    settings: []
   },
   maze: {
-    title: "迷路設計",
+    title: "????",
     label: "BFS / DFS / A*",
-    score: "探索数",
-    init: initMaze
+    score: "???",
+    init: initMaze,
+    description: "??????BFS?????????????",
+    settings: []
   }
 };
 
 const colors = ["#5d95d6", "#f0b84b", "#e4667b", "#15996f"];
+const views = {
+  select: document.querySelector("#selectView"),
+  settings: document.querySelector("#settingsView"),
+  play: document.querySelector("#playView")
+};
 const area = document.querySelector("#gameArea");
 const message = document.querySelector("#message");
 const title = document.querySelector("#gameTitle");
 const label = document.querySelector("#modeLabel");
 const scoreLabel = document.querySelector("#scoreLabel");
 const scoreValue = document.querySelector("#scoreValue");
+const settingsTitle = document.querySelector("#settingsTitle");
+const settingsLabel = document.querySelector("#settingsLabel");
+const settingsMessage = document.querySelector("#settingsMessage");
+const settingsArea = document.querySelector("#settingsArea");
 let currentGame = "binary";
+let selectedSettings = {};
 let cleanup = () => {};
 
 document.querySelectorAll(".game-card").forEach((button) => {
-  button.addEventListener("click", () => loadGame(button.dataset.game));
+  button.addEventListener("click", () => openSettings(button.dataset.game));
 });
 
-document.querySelector("#resetGame").addEventListener("click", () => loadGame(currentGame));
+document.querySelector("#resetGame").addEventListener("click", () => {
+  if (views.play.classList.contains("active")) startGame();
+});
+document.querySelector("#backToSelect").addEventListener("click", showSelect);
+document.querySelector("#backToSettings").addEventListener("click", () => openSettings(currentGame));
+document.querySelector("#backToGames").addEventListener("click", showSelect);
+document.querySelector("#startGame").addEventListener("click", startGame);
 
-function loadGame(key) {
+function showView(name) {
+  Object.entries(views).forEach(([key, view]) => view.classList.toggle("active", key === name));
+}
+
+function showSelect() {
   cleanup();
+  cleanup = () => {};
+  area.innerHTML = "";
+  showView("select");
+}
+
+function openSettings(key) {
+  cleanup();
+  cleanup = () => {};
   currentGame = key;
-  document.querySelectorAll(".game-card").forEach((button) => {
-    button.classList.toggle("active", button.dataset.game === key);
-  });
   const game = games[key];
+  settingsTitle.textContent = game.title;
+  settingsLabel.textContent = game.label;
+  settingsMessage.textContent = game.description;
+  if (!selectedSettings[key]) selectedSettings[key] = defaultSettings(game);
+  renderSettings(game);
+  showView("settings");
+}
+
+function defaultSettings(game) {
+  const values = {};
+  game.settings.forEach((group) => {
+    values[group.key] = group.options[0].value;
+  });
+  return values;
+}
+
+function renderSettings(game) {
+  settingsArea.innerHTML = "";
+  const values = selectedSettings[currentGame];
+  if (!game.settings.length) {
+    settingsArea.append(element("div", "rule-note", "?????????????????????????????"));
+    return;
+  }
+  game.settings.forEach((group) => {
+    const section = element("section", "setting-group");
+    section.append(element("h3", "", group.label));
+    const options = element("div", "setting-options");
+    group.options.forEach((option) => {
+      const button = element("button", "setting-option");
+      button.dataset.value = option.value;
+      button.innerHTML = "<strong>" + option.label + "</strong><span>" + option.description + "</span>";
+      button.classList.toggle("active", values[group.key] === option.value);
+      button.addEventListener("click", () => {
+        values[group.key] = option.value;
+        renderSettings(game);
+      });
+      options.append(button);
+    });
+    section.append(options);
+    settingsArea.append(section);
+  });
+}
+
+function startGame() {
+  cleanup();
+  const game = games[currentGame];
   title.textContent = game.title;
   label.textContent = game.label;
   scoreLabel.textContent = game.score;
   scoreValue.textContent = "0";
+  message.textContent = "";
   area.innerHTML = "";
-  cleanup = game.init();
+  showView("play");
+  cleanup = game.init({ ...(selectedSettings[currentGame] || {}) });
 }
 
 function setMessage(text) {
@@ -77,25 +183,18 @@ function element(tag, className, text) {
   return node;
 }
 
-function initBinary() {
+function initBinary(options = {}) {
   const levels = {
     three: { name: "3桁", digits: 3 },
     four: { name: "4桁", digits: 4 },
     five: { name: "5桁", digits: 5 }
   };
-  let levelKey = "three";
+  let levelKey = options.level || "three";
   let secret = "";
   let candidates = [];
   let history = [];
   let attempts = 0;
   let finished = false;
-
-  const levelControls = element("div", "segmented");
-  Object.entries(levels).forEach(([key, level]) => {
-    const button = element("button", "segment", level.name);
-    button.addEventListener("click", () => startLevel(key));
-    levelControls.append(button);
-  });
 
   const panel = element("div", "binary-panel");
   const status = element("div", "binary-status");
@@ -118,7 +217,7 @@ function initBinary() {
   const historyList = element("div", "hit-history-list");
   historyPanel.append(historyTitle, historyList);
   panel.append(status, controls);
-  area.append(levelControls, panel, historyPanel);
+  area.append(panel, historyPanel);
 
   function startLevel(key) {
     levelKey = key;
@@ -143,10 +242,6 @@ function initBinary() {
     digitBox.innerHTML = "<span>難易度</span><strong>" + level.digits + "桁</strong>";
     candidateBox.innerHTML = "<span>残り候補</span><strong>" + candidates.length + "</strong>";
     attemptBox.innerHTML = "<span>手数</span><strong>" + attempts + "</strong>";
-    levelControls.querySelectorAll(".segment").forEach((button, index) => {
-      button.classList.toggle("active", Object.keys(levels)[index] === levelKey);
-    });
-
     historyList.innerHTML = "";
     history.forEach((item) => {
       const row = element("div", "hit-history-row");
@@ -237,7 +332,7 @@ function judgeHitBlow(guess, answer) {
   return { hit, blow };
 }
 
-function initCargo() {
+function initCargo(options = {}) {
   const levels = {
     easy: { name: "やさしい", count: 6, chunk: 2 },
     normal: { name: "ふつう", count: 8, chunk: 3 },
@@ -248,8 +343,8 @@ function initCargo() {
     capacity: { name: "容量制限", capacity: 3, visible: Infinity },
     preview: { name: "先読み制限", capacity: Infinity, visible: 3 }
   };
-  let levelKey = "easy";
-  let modeKey = "normal";
+  let levelKey = options.level || "easy";
+  let modeKey = options.mode || "normal";
   let target = [];
   let waiting = [];
   let stack = [];
@@ -259,18 +354,6 @@ function initCargo() {
   let steps = 0;
   let misses = 0;
 
-  const levelControls = element("div", "segmented");
-  Object.entries(levels).forEach(([key, level]) => {
-    const button = element("button", "segment", level.name);
-    button.addEventListener("click", () => startLevel(key));
-    levelControls.append(button);
-  });
-  const modeControls = element("div", "segmented");
-  Object.entries(modes).forEach(([key, mode]) => {
-    const button = element("button", "segment", mode.name);
-    button.addEventListener("click", () => startMode(key));
-    modeControls.append(button);
-  });
   const controls = element("div", "controls");
   const addStack = element("button", "tool-button", "Stackに入れる");
   const removeStack = element("button", "tool-button primary", "Stackから出す");
@@ -289,18 +372,8 @@ function initCargo() {
   board.append(stackPanel.wrap, queuePanel.wrap);
   const targetLine = element("div", "rule-note");
   const outputPanel = element("div", "output-panel");
-  area.append(levelControls, modeControls, controls, waitingPanel, targetLine, board);
+  area.append(controls, waitingPanel, targetLine, board);
   area.append(outputPanel);
-
-  function startLevel(key) {
-    levelKey = key;
-    resetCargo();
-  }
-
-  function startMode(key) {
-    modeKey = key;
-    resetCargo();
-  }
 
   function resetCargo() {
     const level = levels[levelKey];
@@ -403,12 +476,6 @@ function initCargo() {
     const stuck = !cleared && !canCurrentStateFinish(waiting, stack, queue, target.slice(output.length), modes[modeKey].capacity);
     setMessage(cleared ? `クリア。${rank}で0から${target[target.length - 1]}まで順番に取り出せました。` : stuck ? "詰みです。この状態から目標順には戻せません。やり直しで再挑戦できます。" : lastAction);
     setScore(cleared ? `${steps} / ${rank}` : `${steps} / ミス${misses}`);
-    levelControls.querySelectorAll(".segment").forEach((button, index) => {
-      button.classList.toggle("active", Object.keys(levels)[index] === levelKey);
-    });
-    modeControls.querySelectorAll(".segment").forEach((button, index) => {
-      button.classList.toggle("active", Object.keys(modes)[index] === modeKey);
-    });
     [addStack, removeStack, addQueue, removeQueue].forEach((button) => {
       button.disabled = cleared;
     });
@@ -497,7 +564,7 @@ function canCurrentStateFinish(waiting, stack, queue, remainingTarget, capacity)
   return dfs(0, 0, [...stack], [...queue]);
 }
 
-function initRiver() {
+function initRiver(options = {}) {
   const levels = {
     easy: {
       name: "やさしい",
@@ -545,20 +612,13 @@ function initRiver() {
       ruleText: "操縦できるのは父・母・メイド。父は母なしで娘と残れません。母は父なしで息子と残れません。犬はメイドなしで誰かと残れません。"
     }
   };
-  let levelKey = "easy";
+  let levelKey = options.level || "easy";
   let level = levels[levelKey];
   let items = level.items;
   let state = { boat: "left", left: items.map((item) => item.id), right: [] };
   let selected = new Set();
   let moves = 0;
   let best = [];
-
-  const levelControls = element("div", "segmented");
-  Object.entries(levels).forEach(([key, entry]) => {
-    const button = element("button", "segment", entry.name);
-    button.addEventListener("click", () => startLevel(key));
-    levelControls.append(button);
-  });
 
   const controls = element("div", "controls river-controls");
   const moveButton = element("button", "tool-button primary", "船を動かす");
@@ -577,7 +637,7 @@ function initRiver() {
   river.append(boat);
   const rightBank = bankPanel("右岸");
   board.append(leftBank.wrap, river, rightBank.wrap);
-  area.append(levelControls, controls, rule, board);
+  area.append(controls, rule, board);
 
   function startLevel(key) {
     levelKey = key;
@@ -605,9 +665,6 @@ function initRiver() {
     boat.className = `boat ${state.boat}`;
     rule.textContent = `ルール: 船は${level.capacity}人まで。${level.ruleText} 最短は${best.length - 1}手です。`;
     setScore(`${moves} / ${best.length - 1}`);
-    levelControls.querySelectorAll(".segment").forEach((button, index) => {
-      button.classList.toggle("active", Object.keys(levels)[index] === levelKey);
-    });
     const problem = riverProblem(state, level);
     const cleared = state.right.length === items.length && state.boat === "right";
     if (cleared) {

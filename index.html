@@ -16,9 +16,9 @@
       <button class="icon-button" id="resetGame" title="今のゲームをリセット" aria-label="今のゲームをリセット">↻</button>
     </header>
 
-    <section class="layout">
+    <section class="view active" id="selectView">
       <nav class="game-list" aria-label="ゲーム一覧">
-        <button class="game-card active" data-game="binary">
+        <button class="game-card" data-game="binary">
           <span class="card-title">Hit &amp; Blow 探索</span>
           <span class="card-subtitle">判定結果から候補を絞る数字推理</span>
           <span class="card-meta">候補削減 / 制約探索</span>
@@ -44,7 +44,26 @@
           <span class="card-meta">BFS / DFS / A*</span>
         </button>
       </nav>
+    </section>
 
+    <section class="view" id="settingsView">
+      <section class="stage" aria-live="polite">
+        <div class="stage-head">
+          <div>
+            <p class="mode-label" id="settingsLabel">設定</p>
+            <h2 id="settingsTitle">ゲーム設定</h2>
+          </div>
+          <div class="page-actions">
+            <button class="tool-button" id="backToSelect">戻る</button>
+            <button class="tool-button primary" id="startGame">開始</button>
+          </div>
+        </div>
+        <div class="message" id="settingsMessage">難易度やモードを選んでください。</div>
+        <div id="settingsArea" class="settings-area"></div>
+      </section>
+    </section>
+
+    <section class="view" id="playView">
       <section class="stage" aria-live="polite">
         <div class="stage-head">
           <div>
@@ -57,7 +76,11 @@
           </div>
         </div>
 
-        <div class="message" id="message">1から100までの秘密の数を当てよう。</div>
+        <div class="play-nav">
+          <button class="tool-button" id="backToSettings">設定へ</button>
+          <button class="tool-button" id="backToGames">ゲーム選択</button>
+        </div>
+        <div class="message" id="message">ゲームを開始してください。</div>
         <div id="gameArea" class="game-area"></div>
       </section>
     </section>
